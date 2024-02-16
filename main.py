@@ -23,8 +23,8 @@ class DjangoFilterTransformer(Transformer):
         return False
 
     @staticmethod
-    def date(d):
-        return d[0]
+    def DATE(d):
+        return str(d)
 
     @staticmethod
     def not_expr(args):
@@ -57,11 +57,11 @@ class DjangoFilterTransformer(Transformer):
 with open("grammar.enbf", "r") as file:
     grammar = file.read()
 
-parser = Lark(grammar, parser="lalr")
+parser = Lark(grammar)
 # text = "(assignee=1|[1] in assistants|position=1)&~status in [1,2]"
 # text = "assignee in [2,3,4] | [2,3,4] in assistants | position=2"
-text = "(assignee=1|[1] in assistants|position=1)&~(status=3&create_date<=2024)"
-
+# text = "(assignee=1|[1] in assistants|position=1)&~(status=3&create_date<=2024-01-15)"
+text = "create_date<=2014-01-15"
 tree = parser.parse(text=text)
 print(tree.pretty())
 res = DjangoFilterTransformer().transform(tree)

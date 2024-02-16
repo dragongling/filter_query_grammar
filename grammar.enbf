@@ -13,11 +13,11 @@ bool_expr: expr BOOL_OP expr
     | list IN FIELD
 
 list : "[" [value ("," value)*] "]"
-?value: int | string | bool | date
+?value: DATE | int | string | bool
 string: ESCAPED_STRING
 FIELD: /[a-zA-Z][a-zA-Z0-9_]*/
 ?bool: "true" -> true | "false" -> false
-date: /\d{4}-\d{2}-\d{2}/
+DATE.1: /\d{4}-\d{2}-\d{2}/
 int: INT
 
 IN: "in"
