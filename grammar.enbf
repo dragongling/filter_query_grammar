@@ -1,0 +1,34 @@
+start: expr
+
+?expr: q_expr
+    | "(" expr ")"
+    | not_op expr
+    | expr bool_op expr
+
+?q_expr: field comp_op value
+    | field IN list
+    | list IN field
+
+?value: int | string | bool | date
+string: ESCAPED_STRING
+field: WORD
+?bool: "true" -> true | "false" -> false
+date: /\d{4}-\d{2}-\d{2}/
+list : "[" [value ("," value)*] "]"
+int: INT
+
+not_op: "~"
+IN: "in"
+bool_op: "|" -> or_op | "&" -> and_op
+?comp_op: eq | gt | lt | gte | lte
+eq: "="
+gt: ">"
+lt: "<"
+gte: ">="
+lte: "<="
+
+%import common.WORD
+%import common.ESCAPED_STRING
+%import common.INT
+%import common.WS
+%ignore WS
