@@ -1,20 +1,21 @@
-start: expr
+?start: expr
 
 ?expr: q_expr
     | "(" expr ")"
     | not_expr
-    | expr BOOL_OP expr
+    | bool_expr
 
 not_expr: "~" expr
+bool_expr: expr BOOL_OP expr
 
-?q_expr: field COMP value
-    | field IN list
-    | list IN field
+?q_expr: FIELD COMP value
+    | FIELD IN list
+    | list IN FIELD
 
 list : "[" [value ("," value)*] "]"
 ?value: int | string | bool | date
 string: ESCAPED_STRING
-field: WORD
+FIELD: /[a-zA-Z][a-zA-Z0-9_]*/
 ?bool: "true" -> true | "false" -> false
 date: /\d{4}-\d{2}-\d{2}/
 int: INT
@@ -23,7 +24,6 @@ IN: "in"
 BOOL_OP: "|" | "&"
 COMP: /(=|>=?|<=?)/
 
-%import common.WORD
 %import common.ESCAPED_STRING
 %import common.INT
 %import common.WS

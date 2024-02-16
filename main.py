@@ -6,71 +6,66 @@ class DjangoFilterTransformer(Transformer):
     list = list
     comp_operations = {"=": "", ">": "__gt", "<": "__lt", ">=": "__gte", "<=": "__lte"}
 
-    def int(self, n):
+    @staticmethod
+    def int(n):
         return int(n[0])
 
-    def string(self, s):
+    @staticmethod
+    def string(s):
         return s[0][1:-1]
 
-    def true(self, _):
+    @staticmethod
+    def true(_):
         return True
 
-    def false(self, _):
+    @staticmethod
+    def false(_):
         return False
 
-    def date(self, d):
+    @staticmethod
+    def date(d):
         return d[0]
 
-    def field(self, f):
-        return f[0]
-
-    def value(self, v):
-        return v[0]
-
-    def not_expr(self, args):
+    @staticmethod
+    def not_expr(args):
         return ~args[0]
 
-    def in_(self, args):
-        if isinstance(args[0], list):  
-            return Q(**{f"{args[2]}__in": args[0]})
-        else:  
-            return Q(**{f"{args[0]}__in": args[2]})
+    @staticmethod
+    def in_(args):
+        field, value = (2, 0) if isinstance(args[0], list) else (0, 2)
+        return Q(**{f"{args[field]}__in": args[value]})
 
-    def expr(self, args):
-        if len(args) == 1:
-            return args[0]
-        elif len(args) == 3:
-            left, op, right = args
-            if isinstance(op, str):
-                if op == "|":
-                    return left | right
-                elif op == "&":
-                    return left & right
+    @staticmethod
+    def bool_expr(args):
+        left, op, right = args
+        if op == "|":
+            return left | right
+        elif op == "&":
+            return left & right
         return args
 
     def q_expr(self, args):
         if len(args) == 3:
             field, operation, value = args
-            if isinstance(operation, str) and operation in self.comp_operations.keys():
+            if operation in self.comp_operations.keys():
                 return Q(**{f"{field}{self.comp_operations[operation]}": value})
             else:
                 return self.in_(args)
         return args
-
-    def start(self, args):
-        return args[0]
 
 
 with open("grammar.enbf", "r") as file:
     grammar = file.read()
 
 parser = Lark(grammar, parser="lalr")
-text = "(assignee=1|[1] in assistants|position=1)&~status=3"
+# text = "(assignee=1|[1] in assistants|position=1)&~status in [1,2]"
+# text = "assignee in [2,3,4] | [2,3,4] in assistants | position=2"
+text = "(assignee=1|[1] in assistants|position=1)&~(status=3&create_date<=2024)"
 
 tree = parser.parse(text=text)
 print(tree.pretty())
 res = DjangoFilterTransformer().transform(tree)
-filter = (Q(assignee=1) | Q(assistants__in=[1]) | Q(position=1)) & ~Q(status=3)
+filter = (Q(assignee=1) | Q(assistants__in=[1]) | Q(position=1)) & ~Q(status__in=[1,2])
 print(res)
 print(filter)
 print(res == filter)
